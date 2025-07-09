@@ -30,7 +30,7 @@ const LandingPage = () => {
 
         <motion.button
           onClick={() => navigate('/simulate')}
-          className="px-8 py-3 bg-white text-indigo-700 font-semibold rounded-full shadow-lg hover:bg-gray-100 transition-transform transform hover:scale-105"
+          className="px-8 py-3 cursor-pointer bg-white text-indigo-700 font-semibold rounded-full shadow-lg hover:bg-gray-100 transition-transform transform hover:scale-105"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
