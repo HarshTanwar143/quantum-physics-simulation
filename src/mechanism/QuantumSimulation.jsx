@@ -14,7 +14,7 @@ const QuantumSimulation = () => {
     X: [[0, 1], [1, 0]], // Pauli-X (NOT gate)
     Y: [[0, -1], [1, 0]], // Pauli-Y
     Z: [[1, 0], [0, -1]], // Pauli-Z
-    H: [[1/Math.sqrt(2), 1/Math.sqrt(2)], [1/Math.sqrt(2), -1/Math.sqrt(2)]] // Hadamard
+    H: [[0.707, 0.707], [0.707, -0.707]] // Hadamard (simplified)
   };
 
   // Matrix multiplication for 2x2 * 2x1
@@ -35,7 +35,6 @@ const QuantumSimulation = () => {
   // Quantum measurement simulation
   const measureQubit = () => {
     const prob0 = Math.pow(Math.abs(qubitState[0]), 2);
-    // const prob1 = Math.pow(Math.abs(qubitState[1]), 2);
     const result = Math.random() < prob0 ? 0 : 1;
     setMeasurementResult(result);
     setQubitState(result === 0 ? [1, 0] : [0, 1]);
@@ -49,81 +48,109 @@ const QuantumSimulation = () => {
 
   // Animation for wave interference
   useEffect(() => {
+    let interval;
     if (activeTab === 'interference' && isAnimating) {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         setInterferencePhase(prev => (prev + 0.1) % (2 * Math.PI));
       }, 50);
-      return () => clearInterval(interval);
     }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [activeTab, isAnimating]);
 
-  const SuperpositionDemo = () => (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold mb-2">Qubit State: |ψ⟩</h3>
-        <div className="bg-gray-100 p-3 rounded font-mono">
-          {qubitState[0].toFixed(3)}|0⟩ + {qubitState[1].toFixed(3)}|1⟩
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 gap-2">
+  const SuperpositionDemo = () => {
+    const prob0 = Math.pow(Math.abs(qubitState[0]), 2);
+    const prob1 = Math.pow(Math.abs(qubitState[1]), 2);
+    
+    return (
+      <div className="space-y-4">
         <div className="text-center">
-          <div className="text-sm text-gray-600">|0⟩ Probability</div>
-          <div 
-            className="bg-blue-500 text-white text-sm py-1 rounded"
-            style={{ width: `${Math.pow(Math.abs(qubitState[0]), 2) * 100}%` }}
-          >
-            {(Math.pow(Math.abs(qubitState[0]), 2) * 100).toFixed(1)}%
+          <h3 className="text-lg font-semibold mb-2">Qubit State: |ψ⟩</h3>
+          <div className="bg-gray-100 p-3 rounded font-mono">
+            {qubitState[0].toFixed(3)}|0⟩ + {qubitState[1] >= 0 ? '' : '-'}{Math.abs(qubitState[1]).toFixed(3)}|1⟩
           </div>
         </div>
-        <div className="text-center">
-          <div className="text-sm text-gray-600">|1⟩ Probability</div>
-          <div 
-            className="bg-red-500 text-white text-sm py-1 rounded"
-            style={{ width: `${Math.pow(Math.abs(qubitState[1]), 2) * 100}%` }}
-          >
-            {(Math.pow(Math.abs(qubitState[1]), 2) * 100).toFixed(1)}%
+        
+        <div className="grid grid-cols-2 gap-2">
+          <div className="text-center">
+            <div className="text-sm text-gray-600">|0⟩ Probability</div>
+            <div 
+              className="bg-blue-500 text-white text-sm py-1 rounded min-w-0"
+              style={{ width: Math.max(prob0 * 100, 10) + '%' }}
+            >
+              {(prob0 * 100).toFixed(1)}%
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-sm text-gray-600">|1⟩ Probability</div>
+            <div 
+              className="bg-red-500 text-white text-sm py-1 rounded min-w-0"
+              style={{ width: Math.max(prob1 * 100, 10) + '%' }}
+            >
+              {(prob1 * 100).toFixed(1)}%
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex gap-2 flex-wrap">
-        <button onClick={() => applyGate('H')} className="px-3 py-1 bg-purple-500 text-white rounded text-sm">
-          H Gate
-        </button>
-        <button onClick={() => applyGate('X')} className="px-3 py-1 bg-blue-500 text-white rounded text-sm">
-          X Gate
-        </button>
-        <button onClick={() => applyGate('Y')} className="px-3 py-1 bg-green-500 text-white rounded text-sm">
-          Y Gate
-        </button>
-        <button onClick={() => applyGate('Z')} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">
-          Z Gate
-        </button>
-      </div>
-
-      <div className="flex gap-2">
-        <button onClick={measureQubit} className="px-4 py-2 bg-red-600 text-white rounded">
-          Measure
-        </button>
-        <button onClick={resetQubit} className="px-4 py-2 bg-gray-500 text-white rounded">
-          <RotateCcw className="w-4 h-4 inline mr-1" />
-          Reset
-        </button>
-      </div>
-
-      {measurementResult !== null && (
-        <div className="text-center p-3 bg-yellow-100 rounded">
-          Measured: |{measurementResult}⟩
+        <div className="flex gap-2 flex-wrap">
+          <button onClick={() => applyGate('H')} className="px-3 py-1 bg-purple-500 text-white rounded text-sm">
+            H Gate
+          </button>
+          <button onClick={() => applyGate('X')} className="px-3 py-1 bg-blue-500 text-white rounded text-sm">
+            X Gate
+          </button>
+          <button onClick={() => applyGate('Y')} className="px-3 py-1 bg-green-500 text-white rounded text-sm">
+            Y Gate
+          </button>
+          <button onClick={() => applyGate('Z')} className="px-3 py-1 bg-yellow-500 text-white rounded text-sm">
+            Z Gate
+          </button>
         </div>
-      )}
-    </div>
-  );
+
+        <div className="flex gap-2">
+          <button onClick={measureQubit} className="px-4 py-2 bg-red-600 text-white rounded">
+            Measure
+          </button>
+          <button onClick={resetQubit} className="px-4 py-2 bg-gray-500 text-white rounded">
+            <RotateCcw className="w-4 h-4 inline mr-1" />
+            Reset
+          </button>
+        </div>
+
+        {measurementResult !== null && (
+          <div className="text-center p-3 bg-yellow-100 rounded">
+            Measured: |{measurementResult}⟩
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const InterferenceDemo = () => {
+    const generateWavePoints = (waveFunc) => {
+      const points = [];
+      for (let i = 0; i < 60; i++) {
+        const x = i * 5;
+        const y = 100 + 30 * waveFunc(i * 0.3, interferencePhase);
+        points.push({ x, y });
+      }
+      return points;
+    };
+
     const wave1 = (x, t) => Math.sin(x - t);
     const wave2 = (x, t) => Math.sin(x - t + Math.PI/2);
     const interference = (x, t) => wave1(x, t) + wave2(x, t);
+
+    const wave1Points = generateWavePoints(wave1);
+    const wave2Points = generateWavePoints(wave2);
+    const interferencePoints = generateWavePoints((x, t) => interference(x, t) * 0.67);
+
+    const createPath = (points) => {
+      if (points.length === 0) return '';
+      return `M ${points[0].x} ${points[0].y} ` + 
+             points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ');
+    };
     
     return (
       <div className="space-y-4">
@@ -139,38 +166,27 @@ const QuantumSimulation = () => {
         </div>
         
         <svg width="300" height="200" className="border rounded mx-auto block">
-          {/* Wave 1 */}
           <path
-            d={`M 0 ${100 + 30 * wave1(0, interferencePhase)} ${Array.from({length: 60}, (_, i) => 
-              `L ${i * 5} ${100 + 30 * wave1(i * 0.3, interferencePhase)}`
-            ).join(' ')}`}
+            d={createPath(wave1Points)}
             stroke="blue"
             strokeWidth="2"
             fill="none"
           />
-          
-          {/* Wave 2 */}
           <path
-            d={`M 0 ${100 + 30 * wave2(0, interferencePhase)} ${Array.from({length: 60}, (_, i) => 
-              `L ${i * 5} ${100 + 30 * wave2(i * 0.3, interferencePhase)}`
-            ).join(' ')}`}
+            d={createPath(wave2Points)}
             stroke="red"
             strokeWidth="2"
             fill="none"
           />
-          
-          {/* Interference pattern */}
           <path
-            d={`M 0 ${100 + 20 * interference(0, interferencePhase)} ${Array.from({length: 60}, (_, i) => 
-              `L ${i * 5} ${100 + 20 * interference(i * 0.3, interferencePhase)}`
-            ).join(' ')}`}
+            d={createPath(interferencePoints)}
             stroke="purple"
             strokeWidth="3"
             fill="none"
           />
         </svg>
         
-        <div className="text-center text-sm">
+        <div className="text-center text-sm space-y-1">
           <div><span className="text-blue-500">■</span> Wave 1</div>
           <div><span className="text-red-500">■</span> Wave 2</div>
           <div><span className="text-purple-500">■</span> Interference</div>
@@ -253,34 +269,58 @@ const QuantumSimulation = () => {
     );
   };
 
-  const tabs = [
-    { id: 'superposition', label: 'Superposition', component: SuperpositionDemo },
-    { id: 'interference', label: 'Interference', component: InterferenceDemo },
-    { id: 'entanglement', label: 'Entanglement', component: EntanglementDemo }
-  ];
+  const renderActiveTab = () => {
+    switch (activeTab) {
+      case 'superposition':
+        return <SuperpositionDemo />;
+      case 'interference':
+        return <InterferenceDemo />;
+      case 'entanglement':
+        return <EntanglementDemo />;
+      default:
+        return <SuperpositionDemo />;
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-4 bg-white">
       <h1 className="text-2xl font-bold text-center mb-6">Quantum Physics Simulation</h1>
       
       <div className="flex border-b mb-4">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 font-medium ${
-              activeTab === tab.id 
-                ? 'border-b-2 border-blue-500 text-blue-600' 
-                : 'text-gray-500'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        <button
+          onClick={() => setActiveTab('superposition')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'superposition'
+              ? 'border-b-2 border-blue-500 text-blue-600' 
+              : 'text-gray-500'
+          }`}
+        >
+          Superposition
+        </button>
+        <button
+          onClick={() => setActiveTab('interference')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'interference'
+              ? 'border-b-2 border-blue-500 text-blue-600' 
+              : 'text-gray-500'
+          }`}
+        >
+          Interference
+        </button>
+        <button
+          onClick={() => setActiveTab('entanglement')}
+          className={`px-4 py-2 font-medium ${
+            activeTab === 'entanglement'
+              ? 'border-b-2 border-blue-500 text-blue-600' 
+              : 'text-gray-500'
+          }`}
+        >
+          Entanglement
+        </button>
       </div>
       
       <div className="min-h-96">
-        {tabs.find(tab => tab.id === activeTab)?.component()}
+        {renderActiveTab()}
       </div>
     </div>
   );
